@@ -1,7 +1,7 @@
 import requests
 
 def main():
-    url = 'http://localhost:8000/read_datasets'
+    url = 'http://localhost:8000/process_csv'
     path_1 = 'datasets/dataset_1.csv'
     path_2 = 'datasets/dataset_2.csv'
 
