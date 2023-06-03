@@ -3,6 +3,8 @@ import os
 
 def main():
 
+    ip_address = 'localhost'
+
     # Path for storing result csv files
     base_dir = os.path.dirname(os.path.abspath(__file__))
     result_dir = os.path.join(base_dir, 'results')
@@ -12,7 +14,7 @@ def main():
 
     results_path = result_dir
 
-    api_endpoint = 'http://localhost:8000/get_results'
+    api_endpoint = f'http://{ip_address}:8000/get_results'
 
     response = requests.get(api_endpoint)
 

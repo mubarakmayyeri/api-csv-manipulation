@@ -25,12 +25,12 @@ async def process_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile 
         df1 = pd.read_csv(dataset_1.file)
         df2 = pd.read_csv(dataset_2.file)
 
-        # Printing the datasets
-        print(f'Dataset 1: {df1.head()}')
-        print("-------------------------------------")
-        print("-------------------------------------")
-        print("-------------------------------------")
-        print(f'Dataset 2: {df2.head()}')
+        # # Printing the datasets
+        # print(f'Dataset 1: {df1.head()}')
+        # print("-------------------------------------")
+        # print("-------------------------------------")
+        # print("-------------------------------------")
+        # print(f'Dataset 2: {df2.head()}')
 
         # Processing the dataframes
         sum_df1 = df1['A'] + df1['B']
@@ -53,13 +53,13 @@ async def process_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile 
         result_df2 = pd.DataFrame({'E': sum_df2, 'F': diff_df2, 'G': product_df2, 'H': div_df2})\
 
         # Printing the reulst dataframes
-        print("-------------------------------------")
-        print("-------------------------------------")
-        print("-------------------------------------")
-        print('Results:')
-        print(f'Ouput_1:\n{result_df1.head()}')
-        print("-------------------------------------")
-        print(f'Ouput_1:\n{result_df2.head()}')
+        # print("-------------------------------------")
+        # print("-------------------------------------")
+        # print("-------------------------------------")
+        # print('Results:')
+        # print(f'Ouput_1:\n{result_df1.head()}')
+        # print("-------------------------------------")
+        # print(f'Ouput_1:\n{result_df2.head()}')
 
         # Generating output csv files
         result_1 = result_df1.to_csv(f'{results_path}/result_1.csv', index=False)

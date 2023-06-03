@@ -1,7 +1,9 @@
 import requests
 
 def main():
-    url = 'http://localhost:8000/process_data'
+    ip_address = 'localhost'
+
+    url = f'http://{ip_address}:8000/process_data'
     path_1 = 'datasets/dataset_1.csv'
     path_2 = 'datasets/dataset_2.csv'
 
