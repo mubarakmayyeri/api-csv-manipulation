@@ -1,4 +1,5 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import FileResponse
 import pandas as pd
 import time
 import os
@@ -15,8 +16,8 @@ if not os.path.exists(result_dir):
 
 results_path = result_dir
 
-@app.post("/process_csv")
-async def process_csv(dataset_1: UploadFile = File(...), dataset_2: UploadFile = File(...)):
+@app.post("/process_data")
+async def process_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile = File(...)):
 
     allowed_extensions = ['.csv']
     try:
@@ -68,6 +69,22 @@ async def process_csv(dataset_1: UploadFile = File(...), dataset_2: UploadFile =
 
     except pd.errors.ParserError:
         raise HTTPException(status_code=400, detail="Invalid CSV file format.")
+
+@app.get("/get_results")
+async def get_result_files():
+    file_path_1 = os.path.join(results_path, 'result_1.csv')
+    file_path_2 = os.path.join(results_path, 'result_2.csv')
+
+    if not os.path.exists(file_path_1) or not os.path.exists(file_path_2):
+        raise HTTPException(status_code=404, detail="Result files not found.")
+
+    # Return both csv files as FileResponse
+    response = [
+        FileResponse(file_path_1, filename='result_1.csv'),
+        FileResponse(file_path_2, filename='result_2.csv')
+    ]
+
+    return response
 
 
 
