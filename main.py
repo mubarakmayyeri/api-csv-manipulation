@@ -53,7 +53,7 @@ def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
 def generate_result_files(result_df1: pd.DataFrame, result_df2: pd.DataFrame) -> None:
 
     # Adding time delay of 60s
-    # time.sleep(60)
+    time.sleep(60)
 
     result_df1.to_csv(f'{results_path}/result_1.csv', index=False)
     result_df2.to_csv(f'{results_path}/result_2.csv', index=False)
