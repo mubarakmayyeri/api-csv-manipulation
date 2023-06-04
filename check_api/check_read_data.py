@@ -10,16 +10,14 @@ def main():
 
     files = {'dataset_1': open(path_1, 'rb'), 'dataset_2': open(path_2, 'rb')}
     response = requests.post(url, files=files)
+    response_data = response.json()
 
     if response.status_code == 200:
-        response_data = response.json()
         if 'message' in response_data:
             print("Response message:", response_data['message'])
 
     else:
-        print("An error occurred.")
-        response_data = response.json()
-        print(response_data['detail'])
+        print(f"Error: {response.status_code} - {response_data['detail']}")
 
 if __name__ == '__main__':
     main()

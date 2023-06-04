@@ -17,11 +17,12 @@ def main():
     api_endpoint = f'http://{ip_address}:8000/get_results'
 
     response = requests.get(api_endpoint)
+    response_data = response.json()
 
     if response.status_code == 200:
-        files_data = response.json()
+        print(response.json())
 
-        for i, file_data in enumerate(files_data):
+        for i, file_data in enumerate(response_data):
             file_path = file_data['path']
             filename = f'result_{i+1}.csv'
             
@@ -38,9 +39,7 @@ def main():
                 print(f"Error occurred while reading file '{filename}'.")
 
     else:
-        print("Error occurred while retrieving the result files.")
-        response_data = response.json()
-        print(response_data['detail'])
+        print(f"Error: {response.status_code} - {response_data['detail']}")
 
 if __name__ == '__main__':
     main()

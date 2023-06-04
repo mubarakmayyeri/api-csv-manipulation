@@ -1,8 +1,11 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, UploadFile, File, HTTPException, status
+from fastapi.responses import FileResponse, StreamingResponse
+from typing import Generator
 import pandas as pd
+import zipfile
 import time
 import os
+import io
 import uvicorn
 
 app = FastAPI()
@@ -62,6 +65,11 @@ def generate_result_files(result_df1: pd.DataFrame, result_df2: pd.DataFrame) ->
     result_df1.to_csv(f'{results_path}/result_1.csv', index=False)
     result_df2.to_csv(f'{results_path}/result_2.csv', index=False)
 
+# Reading data from file
+async def get_data_from_file(file_path: str) -> Generator:
+    with open(file=file_path, mode="rb") as file_like:
+        yield file_like.read()
+
 @app.get('/')
 async def index():
     return {"message": "API is running succesfully"}
@@ -80,22 +88,32 @@ async def read_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile = F
 
     return {"message": "CSV files read and processed successfully"}
 
+# Endpoint for returning results as zip archive
 @app.get("/get_results")
 async def get_result_files():
 
-    file_path_1 = os.path.join(results_path, 'result_1.csv')
-    file_path_2 = os.path.join(results_path, 'result_2.csv')
+    try:
+        file_path_1 = os.path.join(results_path, 'result_1.csv')
+        file_path_2 = os.path.join(results_path, 'result_2.csv')
 
-    if not os.path.exists(file_path_1) or not os.path.exists(file_path_2):
-        raise HTTPException(status_code=404, detail="Result files not found.")
+        # Create a zip archive
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+            zip_file.write(file_path_1, "result_1.csv")
+            zip_file.write(file_path_2, "result_2.csv")
 
-    # Return both csv files as FileResponse
-    response = [
-        FileResponse(file_path_1, filename='result_1.csv'),
-        FileResponse(file_path_2, filename='result_2.csv')
-    ]
-
-    return response
+        # Prepare the response
+        zip_buffer.seek(0)
+        response = StreamingResponse(
+            content=zip_buffer,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": "attachment; filename=results.zip"
+            }
+        )
+        return response
+    except FileNotFoundError:
+        raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
 
 
 
