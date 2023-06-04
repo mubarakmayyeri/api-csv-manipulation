@@ -17,7 +17,6 @@ def main():
     api_endpoint = f'http://{ip_address}:8000/get_results'
 
     response = requests.get(api_endpoint, stream=True)
-    response_data = response.json()
 
     if response.status_code == 200:
         zip_file_path = os.path.join(results_path, "results.zip")
@@ -26,6 +25,7 @@ def main():
                 file.write(chunk)
         print("Results downloaded successfully.")
     else:
+        response_data = response.json()
         print(f"Error: {response.status_code} - {response_data['detail']}")
 
 if __name__ == '__main__':

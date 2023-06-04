@@ -105,7 +105,13 @@ async def get_result_files():
                 "Content-Disposition": "attachment; filename=results.zip"
             }
         )
+
+        # Removing the result CSV files
+        os.remove(file_path_1)
+        os.remove(file_path_2)
+
         return response
+        
     except FileNotFoundError:
         raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
 
