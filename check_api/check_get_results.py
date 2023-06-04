@@ -23,7 +23,7 @@ def main():
         with open(zip_file_path, "wb") as file:
             for chunk in response.iter_content(chunk_size=128):
                 file.write(chunk)
-        print("Results downloaded successfully.")
+        print(f"{response.status_code} - Results downloaded successfully.")
     else:
         response_data = response.json()
         print(f"Error: {response.status_code} - {response_data['detail']}")

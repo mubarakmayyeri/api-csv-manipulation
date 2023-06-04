@@ -68,7 +68,8 @@ def generate_result_files(result_df1: pd.DataFrame, result_df2: pd.DataFrame) ->
 async def index():
     return {"message": "API is running succesfully"}
 
-@app.post("/read_data")
+# Endpoint for reading and processing CSV files
+@app.post("/read_data", status_code=status.HTTP_201_CREATED)
 async def read_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile = File(...)):
     validate_csv(dataset_1)
     validate_csv(dataset_2)
@@ -111,7 +112,7 @@ async def get_result_files():
         os.remove(file_path_2)
 
         return response
-        
+
     except FileNotFoundError:
         raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
 

@@ -12,9 +12,9 @@ def main():
     response = requests.post(url, files=files)
     response_data = response.json()
 
-    if response.status_code == 200:
+    if response.status_code == 201:
         if 'message' in response_data:
-            print("Response message:", response_data['message'])
+            print(f"Success: {response.status_code} - {response_data['message']}")
 
     else:
         print(f"Error: {response.status_code} - {response_data['detail']}")
