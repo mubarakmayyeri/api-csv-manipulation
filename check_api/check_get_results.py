@@ -16,28 +16,15 @@ def main():
 
     api_endpoint = f'http://{ip_address}:8000/get_results'
 
-    response = requests.get(api_endpoint)
+    response = requests.get(api_endpoint, stream=True)
     response_data = response.json()
 
     if response.status_code == 200:
-        print(response.json())
-
-        for i, file_data in enumerate(response_data):
-            file_path = file_data['path']
-            filename = f'result_{i+1}.csv'
-            
-            try:
-                with open(file_path, 'rb') as file:
-                    file_content = file.read()
-                    with open(os.path.join(result_dir, filename), 'wb') as result_file:
-                        result_file.write(file_content)
-                print(f"File '{filename}' downloaded successfully.")
-
-            except FileNotFoundError:
-                print(f"Error occurred while retrieving file '{filename}'. File not found.")
-            except IOError:
-                print(f"Error occurred while reading file '{filename}'.")
-
+        zip_file_path = os.path.join(results_path, "results.zip")
+        with open(zip_file_path, "wb") as file:
+            for chunk in response.iter_content(chunk_size=128):
+                file.write(chunk)
+        print("Results downloaded successfully.")
     else:
         print(f"Error: {response.status_code} - {response_data['detail']}")
 

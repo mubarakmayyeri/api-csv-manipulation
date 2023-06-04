@@ -1,6 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, status
-from fastapi.responses import FileResponse, StreamingResponse
-from typing import Generator
+from fastapi.responses import StreamingResponse
 import pandas as pd
 import zipfile
 import time
@@ -40,7 +39,7 @@ def validate_csv(file):
 # Process the CSV files
 def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
     # Adding time delay of 60s
-    # time.sleep(60)
+    time.sleep(60)
 
     sum_df1 = df1['A'] + df1['B']
     sum_df2 = df2['A'] + df2['B']
@@ -64,11 +63,6 @@ def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
 def generate_result_files(result_df1: pd.DataFrame, result_df2: pd.DataFrame) -> None:
     result_df1.to_csv(f'{results_path}/result_1.csv', index=False)
     result_df2.to_csv(f'{results_path}/result_2.csv', index=False)
-
-# Reading data from file
-async def get_data_from_file(file_path: str) -> Generator:
-    with open(file=file_path, mode="rb") as file_like:
-        yield file_like.read()
 
 @app.get('/')
 async def index():
