@@ -27,7 +27,18 @@ def read_csv_file(file):
 
         raise HTTPException(status_code=400, detail="Invalid CSV file format.")
 
+# Validate input files
+def validate_csv(file):
+    allowed_extensions = ["csv"]
+    file_extension = file.filename.split(".")[-1]
+    if file_extension not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="Invalid file format. Only CSV files are allowed.")
+
+# Process the CSV files
 def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
+    # Adding time delay of 60s
+    # time.sleep(60)
+
     sum_df1 = df1['A'] + df1['B']
     sum_df2 = df2['A'] + df2['B']
 
@@ -44,17 +55,10 @@ def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
     result_df1 = pd.DataFrame({'E': sum_df1, 'F': diff_df1, 'G': product_df1, 'H': div_df1})
     result_df2 = pd.DataFrame({'E': sum_df2, 'F': diff_df2, 'G': product_df2, 'H': div_df2})
 
-
-    # generate_result_files(result_df1, result_df2)
-
     return result_df1, result_df2
 
 # Generating result files
 def generate_result_files(result_df1: pd.DataFrame, result_df2: pd.DataFrame) -> None:
-
-    # Adding time delay of 60s
-    time.sleep(60)
-
     result_df1.to_csv(f'{results_path}/result_1.csv', index=False)
     result_df2.to_csv(f'{results_path}/result_2.csv', index=False)
 
@@ -64,6 +68,8 @@ async def index():
 
 @app.post("/read_data")
 async def read_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile = File(...)):
+    validate_csv(dataset_1)
+    validate_csv(dataset_2)
 
     df1 = read_csv_file(dataset_1.file)
     df2 = read_csv_file(dataset_2.file)

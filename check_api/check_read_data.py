@@ -18,6 +18,8 @@ def main():
 
     else:
         print("An error occurred.")
+        response_data = response.json()
+        print(response_data['detail'])
 
 if __name__ == '__main__':
     main()
