@@ -25,12 +25,21 @@ python main.py
 ```
 
 2. Access the API endpoints using the following URLs:
-- **Read and process data** (POST method): `http://localhost:8000/read_data`
-  - This endpoint requires two CSV files as input datasets.
-  - The API will read and process the data, generating result files.
 
-- **Get result files** (GET method): `http://localhost:8000/get_results`
-  - This endpoint returns two result CSV files as the response.
+    - **Index** (GET method): http://localhost:8000/
+      - This endpoint returns a JSON response indicating whether the API is running successfully.
+      - Response:
+        ```json
+        {
+        "message": "API is running succesfully"
+        }
+        ```
+    - **Read data** (POST method): `http://localhost:8000/read_data`
+      - This endpoint requires two CSV files as input datasets.
+      - The API will read and process the data, generating result files.
+
+    - **Get results** (GET method): `http://localhost:8000/get_results`
+      - This endpoint returns two result CSV files as the response.
 
 ## Directory Structure
 The repository has the following directory structure:
@@ -40,9 +49,10 @@ api-solar-bhai/
 ├── main.py
 ├── requirements.txt
 ├── datasets/
-│ ├── dataset1.csv
-│ └── dataset2.csv
-└── check_api/
+│ ├── datagenerator.ipynb
+│ ├── dataset_1.csv
+│ └── dataset_2.csv
+├── check_api/
 | ├── results/
 │ ├── check_get_results.py
 │ └── check_read_data.py

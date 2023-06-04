@@ -58,6 +58,10 @@ def generate_result_files(result_df1: pd.DataFrame, result_df2: pd.DataFrame) ->
     result_df1.to_csv(f'{results_path}/result_1.csv', index=False)
     result_df2.to_csv(f'{results_path}/result_2.csv', index=False)
 
+@app.get('/')
+async def index():
+    return {"message": "API is running succesfully"}
+
 @app.post("/read_data")
 async def read_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile = File(...)):
 
