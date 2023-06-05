@@ -1,10 +1,8 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, status
-from fastapi.responses import StreamingResponse
 import pandas as pd
-import zipfile
+import json
 import time
 import os
-import io
 import uvicorn
 
 app = FastAPI()
@@ -61,8 +59,14 @@ def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
 
 # Generating result files
 def generate_result_files(result_df1: pd.DataFrame, result_df2: pd.DataFrame) -> None:
-    result_df1.to_csv(f'{results_path}/result_1.csv', index=False)
-    result_df2.to_csv(f'{results_path}/result_2.csv', index=False)
+    result_json_1 = result_df1.to_json(orient='records')
+    result_json_2 = result_df2.to_json(orient='records')
+
+    with open(f'{results_path}/result_1.json', 'w') as file:
+        file.write(result_json_1)
+
+    with open(f'{results_path}/result_2.json', 'w') as file:
+        file.write(result_json_2)
 
 @app.get('/')
 async def index():
@@ -83,35 +87,27 @@ async def read_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile = F
 
     return {"message": "CSV files read and processed successfully"}
 
-# Endpoint for returning results as zip archive
 @app.get("/get_results")
 async def get_result_files():
 
     try:
-        file_path_1 = os.path.join(results_path, 'result_1.csv')
-        file_path_2 = os.path.join(results_path, 'result_2.csv')
+        file_path_1 = os.path.join(results_path, 'result_1.json')
+        file_path_2 = os.path.join(results_path, 'result_2.json')
 
-        # Create a zip archive
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-            zip_file.write(file_path_1, "result_1.csv")
-            zip_file.write(file_path_2, "result_2.csv")
+        with open(file_path_1) as file:
+            result_json_1 = file.read()
 
-        # Prepare the response
-        zip_buffer.seek(0)
-        response = StreamingResponse(
-            content=zip_buffer,
-            media_type="application/zip",
-            headers={
-                "Content-Disposition": "attachment; filename=results.zip"
-            }
-        )
+        with open(file_path_2) as file:
+            result_json_2 = file.read()
 
-        # Removing the result CSV files
+        # Removing the sotred result JSON files
         os.remove(file_path_1)
         os.remove(file_path_2)
 
-        return response
+        return {"result_df1": json.loads(result_json_1), "result_df2": json.loads(result_json_2)}
+
+    except FileNotFoundError:
+        raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
 
     except FileNotFoundError:
         raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)

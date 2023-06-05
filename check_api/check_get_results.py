@@ -16,16 +16,29 @@ def main():
 
     api_endpoint = f'http://{ip_address}:8000/get_results'
 
-    response = requests.get(api_endpoint, stream=True)
+    response = requests.get(api_endpoint)
+    response_data = response.json()
 
     if response.status_code == 200:
-        zip_file_path = os.path.join(results_path, "results.zip")
-        with open(zip_file_path, "wb") as file:
-            for chunk in response.iter_content(chunk_size=128):
-                file.write(chunk)
-        print(f"{response.status_code} - Results downloaded successfully.")
+
+        print(response_data)
+
+        # # Extract the result data
+        # result_df1 = response_data.get('result_df1')
+        # result_df2 = response_data.get('result_df2')
+
+        # # Process or display the result data as needed
+        # print("Result DataFrame 1:")
+        # print(result_df1)
+
+        # print(("------------------------------------------------"))
+        # print(("------------------------------------------------"))
+        # print(("------------------------------------------------"))
+
+        # print("Result DataFrame 2:")
+        # print(result_df2)
+
     else:
-        response_data = response.json()
         print(f"Error: {response.status_code} - {response_data['detail']}")
 
 if __name__ == '__main__':
