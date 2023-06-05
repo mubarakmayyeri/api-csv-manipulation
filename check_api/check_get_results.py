@@ -1,10 +1,14 @@
+from decouple import config
 import requests
 import os
 import json
 
 def main():
 
-    ip_address = 'localhost'
+    ip_address = config('IP_ADDRESS')
+
+    # API key
+    api_key = config('API_KEY')
 
     # Path for storing result csv files
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -15,9 +19,19 @@ def main():
 
     results_path = result_dir
 
-    api_endpoint = f'http://{ip_address}:8000/get_results'
+    api_endpoint = f'http://{ip_address}/get_results'
 
-    response = requests.get(api_endpoint)
+    headers = {
+        'X-API-Key': api_key
+    }
+
+    response = requests.get(api_endpoint, headers=headers)
+
+    if response.status_code == 500:
+        print(f"Error: {response.status_code} - {response.text}")
+
+        return
+
     response_data = response.json()
 
     if response.status_code == 200:

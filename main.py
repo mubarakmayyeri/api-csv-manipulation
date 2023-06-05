@@ -1,4 +1,6 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, status
+from fastapi import FastAPI, UploadFile, File, HTTPException, status, Depends
+from fastapi.security import APIKeyHeader
+from decouple import config
 import pandas as pd
 import json
 import time
@@ -6,6 +8,9 @@ import os
 import uvicorn
 
 app = FastAPI()
+
+API_KEY = config('API_KEY')
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 # Path for storing result csv files
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -15,6 +20,13 @@ if not os.path.exists(result_dir):
     os.makedirs(result_dir)
 
 results_path = result_dir
+
+# Validate API token
+def validate_api_key(api_key: str = Depends(api_key_header)):
+    if api_key == API_KEY:
+        return True
+    else:
+        raise HTTPException(status_code=401, detail="Invalid API token.")
 
 # Read csv files to pandas dataframe
 def read_csv_file(file):
@@ -37,7 +49,7 @@ def validate_csv(file):
 # Process the CSV files
 def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
     # Adding time delay of 60s
-    time.sleep(60)
+    # time.sleep(60)
 
     sum_df1 = df1['A'] + df1['B']
     sum_df2 = df2['A'] + df2['B']
@@ -74,7 +86,7 @@ async def index():
 
 # Endpoint for reading and processing CSV files
 @app.post("/read_data", status_code=status.HTTP_201_CREATED)
-async def read_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile = File(...)):
+async def read_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile = File(...), is_valid_token: bool = Depends(validate_api_key),):
     validate_csv(dataset_1)
     validate_csv(dataset_2)
 
@@ -88,7 +100,7 @@ async def read_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile = F
     return {"message": "CSV files read and processed successfully"}
 
 @app.get("/get_results")
-async def get_result_files():
+async def get_result_files(is_valid_token: bool = Depends(validate_api_key),):
 
     try:
         file_path_1 = os.path.join(results_path, 'result_1.json')

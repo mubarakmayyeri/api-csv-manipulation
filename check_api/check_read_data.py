@@ -1,16 +1,25 @@
+from decouple import config
 import requests
 import json
 
 def main():
-    ip_address = 'localhost'
 
-    url = f'http://{ip_address}:8000/read_data'
+    ip_address = config('IP_ADDRESS')
+
+    # API key
+    api_key = config('API_KEY')
+
+    url = f'http://{ip_address}/read_data'
+
+    headers = {
+        'X-API-Key': api_key
+    }
+
     path_1 = 'datasets/dataset_1.csv'
     path_2 = 'datasets/dataset_2.csv'
-
-
     files = {'dataset_1': open(path_1, 'rb'), 'dataset_2': open(path_2, 'rb')}
-    response = requests.post(url, files=files)
+
+    response = requests.post(url, headers=headers, files=files)
     response_data = response.json()
 
     if response.status_code == 201:
