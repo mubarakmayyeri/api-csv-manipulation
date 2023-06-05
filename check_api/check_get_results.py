@@ -1,5 +1,6 @@
 import requests
 import os
+import json
 
 def main():
 
@@ -21,11 +22,16 @@ def main():
 
     if response.status_code == 200:
 
-        print(response_data)
+        # Extract the result data
+        result_df1 = response_data.get('result_df1')
+        result_df2 = response_data.get('result_df2')
 
-        # # Extract the result data
-        # result_df1 = response_data.get('result_df1')
-        # result_df2 = response_data.get('result_df2')
+        # Save result dataframes to local files
+        with open(f'{results_path}/result_df1.json', 'w') as file:
+            json.dump(result_df1, file)
+
+        with open(f'{results_path}/result_df2.json', 'w') as file:
+            json.dump(result_df2, file)
 
         # # Process or display the result data as needed
         # print("Result DataFrame 1:")
@@ -37,6 +43,8 @@ def main():
 
         # print("Result DataFrame 2:")
         # print(result_df2)
+
+        print("Result dataframes saved successfully.")
 
     else:
         print(f"Error: {response.status_code} - {response_data['detail']}")

@@ -39,7 +39,7 @@ python main.py
       - The API will read and process the data, generating result files.
 
     - **Get results** (GET method): `http://localhost:8000/get_results`
-      - This endpoint returns a zip archive which contains the two result CSV files.
+      - This endpoint returns a JSON file wihch contains the processed dataframes.
 
 ## Directory Structure
 The repository has the following directory structure:
@@ -65,7 +65,7 @@ api-solar-bhai/
 - `requirements.txt`: File containing the required dependencies.
 - `datasets/`: Directory containing sample input CSV files.
 - `check_api/`: Directory containing scripts for testing the API endpoints.
-- `check_api/results/`: Directory where the result zip file will be saved.
+- `check_api/results/`: Directory where the result jspon files will be saved.
 
 
 ## Testing the API
@@ -79,6 +79,6 @@ python .\check_api\check_read_data.py
 ```shell
 python .\check_api\check_get_results.py
 ```
-- The result CSV files will be saved in the `./check_api/results/` directory.
+- The result JSON files will be saved in the `./check_api/results/` directory.
 
 The results directory will be dynamically created during the execution of the testing script and is not part of the repo.
