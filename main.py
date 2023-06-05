@@ -49,7 +49,7 @@ def validate_csv(file):
 # Process the CSV files
 def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
     # Adding time delay of 60s
-    # time.sleep(60)
+    time.sleep(60)
 
     sum_df1 = df1['A'] + df1['B']
     sum_df2 = df2['A'] + df2['B']
@@ -80,6 +80,7 @@ def generate_result_files(result_df1: pd.DataFrame, result_df2: pd.DataFrame) ->
     with open(f'{results_path}/result_2.json', 'w') as file:
         file.write(result_json_2)
 
+# Base url
 @app.get('/')
 async def index():
     return {"message": "API is running succesfully"}

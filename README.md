@@ -2,6 +2,15 @@
 
 This repository contains a Python API developed with FastAPI for CSV file manipulation. It provides endpoints for reading  & processing CSV files, and retrieving result files. The API is designed to handle two input datasets and return the processed results in JSON format.
 
+## Table of Contents
+- [Dependencies](#dependencies)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Directory Structure](#directory-structure)
+- [Environment Variables](#environment-variables)
+- [Testing the API](#testing-the-api)
+- [Live Demo](#live-demo)
+
 ## Dependencies
 - Python 3.11.2
 - FastApi 0.95.2
@@ -95,3 +104,26 @@ python .\check_api\check_get_results.py
 - The result JSON files will be saved in the `./check_api/results/` directory.
 
 The results directory will be dynamically created during the execution of the testing script and is not part of the repo.
+
+## Live demo
+The API has been deployed on an AWS EC2 instance with Nginx.
+
+**Server Details:**
+
+- IP Address: [Your EC2 Instance IP Address]
+- Port: 8000
+
+To access the API endpoints, use the following URLs:
+
+- **Index**: `https://3.108.61.108/`
+- **Read data**: `https://3.108.61.108/read_data`
+- **Get results**: `https://3.108.61.108/get_results`
+
+When calling the `read_data` and `get_results` endpoints, include the following header in your request:
+```json
+{
+"X-API-Key": "Your_API_Key"
+}
+```
+
+Replace `"Your_API_Key"` with the actual API key value.
