@@ -9,7 +9,8 @@ This repository contains a Python API developed with FastAPI for CSV file manipu
 - [Directory Structure](#directory-structure)
 - [Environment Variables](#environment-variables)
 - [Testing the API](#testing-the-api)
-- [Live Demo](#live-demo)
+- [API Server on AWS EC2](#api-server-on-aws-ec2)
+- [Demonstration](#demonstration)
 
 ## Dependencies
 - Python 3.11.2
@@ -34,7 +35,7 @@ python main.py
 
 2. Access the API endpoints using the following URLs:
 
-    - **Index** (GET method): `http://localhost:8000/`
+    - **Index** (GET): http://localhost:8000/
       - This endpoint returns a JSON response indicating whether the API is running successfully.
       - Response:
         ```json
@@ -42,11 +43,11 @@ python main.py
         "message": "API is running succesfully"
         }
         ```
-    - **Read data** (POST method): `http://localhost:8000/read_data`
+    - **Read data** (POST): http://localhost:8000/read_data
       - This endpoint requires two CSV files as input datasets.
       - The API will read and process the data, generating result files.
 
-    - **Get results** (GET method): `http://localhost:8000/get_results`
+    - **Get results** (GET): http://localhost:8000/get_results
       - This endpoint returns a JSON file wihch contains the processed dataframes.
 
 ## Directory Structure
@@ -56,11 +57,13 @@ The repository has the following directory structure:
 api-csv-manipulation/
 ├── main.py
 ├── requirements.txt
-├── datasets/
-│ ├── datagenerator.ipynb
-│ ├── dataset_1.csv
-│ └── dataset_2.csv
+├── demonstration.txt/
+│ └── api_demo.ipynb
 └── check_api/
+  ├── datasets/
+  │ ├── datagenerator.ipynb
+  │ ├── dataset_1.csv
+  │ └── dataset_2.csv
   ├── results/
   ├── check_get_results.py
   └── check_read_data.py
@@ -70,8 +73,9 @@ api-csv-manipulation/
 
 - `main.py`: The main FastAPI code file.
 - `requirements.txt`: File containing the required dependencies.
-- `datasets/`: Directory containing sample input CSV files.
+- `demonstration/`: Directory containing Jupyter notebook for demonstrating usage of API.
 - `check_api/`: Directory containing scripts for testing the API endpoints.
+- `check_api/datasets/`: Directory containing CSV file generator and  sample input CSV files.
 - `check_api/results/`: Directory where the result jspon files will be saved.
 
 ## Environment Variables
@@ -105,19 +109,18 @@ python .\check_api\check_get_results.py
 
 The results directory will be dynamically created during the execution of the testing script and is not part of the repo.
 
-## Live demo
+## API Server on AWS EC2
 The API has been deployed on an AWS EC2 instance with Nginx.
 
 **Server Details:**
 
 - IP Address: [Your EC2 Instance IP Address]
-- Port: 8000
 
 To access the API endpoints, use the following URLs:
 
-- **Index**: `https://3.108.61.108/`
-- **Read data**: `https://3.108.61.108/read_data`
-- **Get results**: `https://3.108.61.108/get_results`
+- **Index**: https://3.108.61.108/
+- **Read data**: https://3.108.61.108/read_data
+- **Get results**: https://3.108.61.108/get_results
 
 When calling the `read_data` and `get_results` endpoints, include the following header in your request:
 ```json
@@ -127,3 +130,6 @@ When calling the `read_data` and `get_results` endpoints, include the following 
 ```
 
 Replace `"Your_API_Key"` with the actual API key value.
+
+## Demonstration
+You can find the demo of how to use the Live API on this [Jupyter Notebook](https://github.com/mubarakmayyeri/api-csv-manipulation/blob/main/demonstration/api_demo.ipynb)

@@ -37,8 +37,8 @@ def main():
     if response.status_code == 200:
 
         # Extract the result data
-        result_df1 = response_data.get('result_df1')
-        result_df2 = response_data.get('result_df2')
+        result_df1 = response_data.get('result_1')
+        result_df2 = response_data.get('result_2')
 
         # Save result dataframes to local files
         with open(f'{results_path}/result_df1.json', 'w') as file:
@@ -47,18 +47,7 @@ def main():
         with open(f'{results_path}/result_df2.json', 'w') as file:
             json.dump(result_df2, file)
 
-        # # Process or display the result data as needed
-        # print("Result DataFrame 1:")
-        # print(result_df1)
-
-        # print(("------------------------------------------------"))
-        # print(("------------------------------------------------"))
-        # print(("------------------------------------------------"))
-
-        # print("Result DataFrame 2:")
-        # print(result_df2)
-
-        print("Result dataframes saved successfully.")
+        print(f"Success: {response.status_code} - Result dataframes saved successfully.")
 
     else:
         print(f"Error: {response.status_code} - {response_data['detail']}")

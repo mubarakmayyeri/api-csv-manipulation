@@ -117,10 +117,7 @@ async def get_result_files(is_valid_token: bool = Depends(validate_api_key),):
         os.remove(file_path_1)
         os.remove(file_path_2)
 
-        return {"result_df1": json.loads(result_json_1), "result_df2": json.loads(result_json_2)}
-
-    except FileNotFoundError:
-        raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
+        return {"result_1": json.loads(result_json_1), "result_2": json.loads(result_json_2)}
 
     except FileNotFoundError:
         raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
