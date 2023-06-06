@@ -57,7 +57,8 @@ The repository has the following directory structure:
 api-csv-manipulation/
 ├── main.py
 ├── requirements.txt
-├── demonstration.txt/
+├── demonstration/
+│ ├── inputs/
 │ └── api_demo.ipynb
 └── check_api/
   ├── datasets/
