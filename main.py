@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, status, Depends
 from fastapi.security import APIKeyHeader
 from decouple import config
 import pandas as pd
+import threading
 import json
 import time
 import os
@@ -20,6 +21,9 @@ if not os.path.exists(result_dir):
     os.makedirs(result_dir)
 
 results_path = result_dir
+
+results_dict = {}  # Dictionary to store result dataframes
+results_lock = threading.Lock()  # Lock to synchronize access to results_dict
 
 # Validate API token
 def validate_api_key(api_key: str = Depends(api_key_header)):
@@ -69,16 +73,8 @@ def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
 
     return result_df1, result_df2
 
-# Generating result files
-def generate_result_files(result_df1: pd.DataFrame, result_df2: pd.DataFrame) -> None:
-    result_json_1 = result_df1.to_json(orient='records')
-    result_json_2 = result_df2.to_json(orient='records')
 
-    with open(f'{results_path}/result_1.json', 'w') as file:
-        file.write(result_json_1)
-
-    with open(f'{results_path}/result_2.json', 'w') as file:
-        file.write(result_json_2)
+# -------------------------------API ENDPOINTS----------------------------------------------------------- #
 
 # Base url
 @app.get('/')
@@ -96,31 +92,24 @@ async def read_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile = F
 
     result_df1, result_df2 = process_data(df1, df2)
 
-    generate_result_files(result_df1, result_df2)
+    with results_lock:
+        user_id = threading.current_thread().ident
+        print(user_id)
+        results_dict[user_id] = (result_df1, result_df2)
 
     return {"message": "CSV files read and processed successfully"}
 
 @app.get("/get_results")
-async def get_result_files(is_valid_token: bool = Depends(validate_api_key),):
-
-    try:
-        file_path_1 = os.path.join(results_path, 'result_1.json')
-        file_path_2 = os.path.join(results_path, 'result_2.json')
-
-        with open(file_path_1) as file:
-            result_json_1 = file.read()
-
-        with open(file_path_2) as file:
-            result_json_2 = file.read()
-
-        # Removing the sotred result JSON files
-        os.remove(file_path_1)
-        os.remove(file_path_2)
-
-        return {"result_1": json.loads(result_json_1), "result_2": json.loads(result_json_2)}
-
-    except FileNotFoundError:
-        raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
+async def get_result_files(is_valid_token: bool = Depends(validate_api_key)):
+    with results_lock:
+        user_id = threading.current_thread().ident
+        if user_id in results_dict:
+            result_df1, result_df2 = results_dict.pop(user_id)
+            result_json_1 = result_df1.to_json(orient='records')
+            result_json_2 = result_df2.to_json(orient='records')
+            return {"result_1": json.loads(result_json_1), "result_2": json.loads(result_json_2)}
+        else:
+            raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
 
 
 
