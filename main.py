@@ -1,12 +1,14 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, status, Depends
 from fastapi.security import APIKeyHeader
 from decouple import config
+import concurrent.futures
 import pandas as pd
 import threading
+import asyncio
+import uvicorn
 import json
 import time
 import os
-import uvicorn
 
 app = FastAPI()
 
@@ -73,6 +75,15 @@ def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
 
     return result_df1, result_df2
 
+# Concurrently process the CSV files for each user
+async def process_files_concurrently(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        loop = asyncio.get_event_loop()
+        result_df1, result_df2 = await loop.run_in_executor(executor, process_data, df1, df2)
+        user_id = threading.current_thread().ident
+        results_dict[user_id] = (result_df1, result_df2)
+        print(user_id)
+
 
 # -------------------------------API ENDPOINTS----------------------------------------------------------- #
 
@@ -90,12 +101,7 @@ async def read_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile = F
     df1 = read_csv_file(dataset_1.file)
     df2 = read_csv_file(dataset_2.file)
 
-    result_df1, result_df2 = process_data(df1, df2)
-
-    with results_lock:
-        user_id = threading.current_thread().ident
-        print(user_id)
-        results_dict[user_id] = (result_df1, result_df2)
+    await process_files_concurrently(df1, df2)
 
     return {"message": "CSV files read and processed successfully"}
 
@@ -114,4 +120,4 @@ async def get_result_files(is_valid_token: bool = Depends(validate_api_key)):
 
 
 if __name__ == '__main__':
-    uvicorn.run("main:app", host="localhost", port=8000, reload=True)
+    uvicorn.run("main:app", host="localhost", port=8000, reload=True, workers=4)
