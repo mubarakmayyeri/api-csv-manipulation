@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, status, Depends
+from fastapi import FastAPI, Request, UploadFile, File, HTTPException, status, Depends
 from fastapi.security import APIKeyHeader
 from decouple import config
 import concurrent.futures
@@ -6,26 +6,18 @@ import pandas as pd
 import threading
 import asyncio
 import uvicorn
+import uuid
 import json
 import time
-import os
 
 app = FastAPI()
 
 API_KEY = config('API_KEY')
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
-# Path for storing result csv files
-base_dir = os.path.dirname(os.path.abspath(__file__))
-result_dir = os.path.join(base_dir, 'results')
-
-if not os.path.exists(result_dir):
-    os.makedirs(result_dir)
-
-results_path = result_dir
-
 results_dict = {}  # Dictionary to store result dataframes
 results_lock = threading.Lock()  # Lock to synchronize access to results_dict
+user_ids = {}  # Dictionary to map user_id to request.client # Dictionary to store result dataframes
 
 # Validate API token
 def validate_api_key(api_key: str = Depends(api_key_header)):
@@ -76,13 +68,20 @@ def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
     return result_df1, result_df2
 
 # Concurrently process the CSV files for each user
-async def process_files_concurrently(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
+async def process_files(df1: pd.DataFrame, df2: pd.DataFrame, user_id: int) -> None:
     with concurrent.futures.ThreadPoolExecutor() as executor:
         loop = asyncio.get_event_loop()
         result_df1, result_df2 = await loop.run_in_executor(executor, process_data, df1, df2)
-        user_id = threading.current_thread().ident
-        results_dict[user_id] = (result_df1, result_df2)
-        print(user_id)
+        
+        # Convert the dataframes to JSON records
+        result_json_1 = result_df1.to_json(orient='records')
+        result_json_2 = result_df2.to_json(orient='records')
+        
+        # Store the results in the results_dict
+        results_dict[user_id] = {
+            "result_1": json.loads(result_json_1),
+            "result_2": json.loads(result_json_2)
+        }
 
 
 # -------------------------------API ENDPOINTS----------------------------------------------------------- #
@@ -94,28 +93,41 @@ async def index():
 
 # Endpoint for reading and processing CSV files
 @app.post("/read_data", status_code=status.HTTP_201_CREATED)
-async def read_data(dataset_1: UploadFile = File(...), dataset_2: UploadFile = File(...), is_valid_token: bool = Depends(validate_api_key),):
+async def read_data(request: Request, dataset_1: UploadFile = File(...), dataset_2: UploadFile = File(...), is_valid_token: bool = Depends(validate_api_key)):
     validate_csv(dataset_1)
     validate_csv(dataset_2)
 
     df1 = read_csv_file(dataset_1.file)
     df2 = read_csv_file(dataset_2.file)
 
-    await process_files_concurrently(df1, df2)
+    user_id = str(uuid.uuid4())  # Generate a unique identifier for each user
+    user_ids[user_id] = request.client
+    print(user_id)
+    print(user_ids)
+
+    await process_files(df1, df2, user_id)
 
     return {"message": "CSV files read and processed successfully"}
 
+
 @app.get("/get_results")
-async def get_result_files(is_valid_token: bool = Depends(validate_api_key)):
-    with results_lock:
-        user_id = threading.current_thread().ident
-        if user_id in results_dict:
-            result_df1, result_df2 = results_dict.pop(user_id)
-            result_json_1 = result_df1.to_json(orient='records')
-            result_json_2 = result_df2.to_json(orient='records')
-            return {"result_1": json.loads(result_json_1), "result_2": json.loads(result_json_2)}
-        else:
-            raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
+async def get_result_files(request: Request, is_valid_token: bool = Depends(validate_api_key)):
+    user_id = None
+    print(user_ids)
+    for k, v in user_ids.items():
+        if v == request.client:
+            user_id = k
+            break
+
+    print(user_id)
+    if user_id is not None and user_id in results_dict:
+        results = results_dict.pop(user_id)
+        if results is not None:
+
+            return results
+    else:
+
+        raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
 
 
 
