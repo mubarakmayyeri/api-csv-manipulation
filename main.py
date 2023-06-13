@@ -101,7 +101,7 @@ async def read_data(request: Request, dataset_1: UploadFile = File(...), dataset
     df2 = read_csv_file(dataset_2.file)
 
     user_id = str(uuid.uuid4())  # Generate a unique identifier for each user
-    user_ids[user_id] = request.client
+    user_ids[user_id] = True
     print(user_id)
     print(user_ids)
 
@@ -114,16 +114,16 @@ async def read_data(request: Request, dataset_1: UploadFile = File(...), dataset
 async def get_result_files(request: Request, is_valid_token: bool = Depends(validate_api_key)):
     user_id = None
     print(user_ids)
-    for k, v in user_ids.items():
-        if v == request.client:
+
+    for k in user_ids.keys():
+        if k in results_dict:
             user_id = k
             break
 
     print(user_id)
-    if user_id is not None and user_id in results_dict:
-        results = results_dict.pop(user_id)
+    if user_id is not None:
+        results = results_dict.pop(user_id, None)
         if results is not None:
-
             return results
     else:
 
