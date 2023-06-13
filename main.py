@@ -15,9 +15,8 @@ app = FastAPI()
 API_KEY = config('API_KEY')
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
-results_dict = {}  # Dictionary to store result dataframes
-results_lock = threading.Lock()  # Lock to synchronize access to results_dict
-user_ids = {}  # Dictionary to map user_id to request.client # Dictionary to store result dataframes
+results_dict = threading.local()  # Thread-local dictionary to store result dataframes
+user_ids = threading.local()  # Thread-local dictionary to map user_id to request.client
 
 # Validate API token
 def validate_api_key(api_key: str = Depends(api_key_header)):
@@ -47,7 +46,7 @@ def validate_csv(file):
 # Process the CSV files
 def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
     # Adding time delay of 60s
-    time.sleep(60)
+    # time.sleep(60)
 
     sum_df1 = df1['A'] + df1['B']
     sum_df2 = df2['A'] + df2['B']
@@ -78,7 +77,7 @@ async def process_files(df1: pd.DataFrame, df2: pd.DataFrame, user_id: int) -> N
         result_json_2 = result_df2.to_json(orient='records')
         
         # Store the results in the results_dict
-        results_dict[user_id] = {
+        results_dict.user_results = {
             "result_1": json.loads(result_json_1),
             "result_2": json.loads(result_json_2)
         }
@@ -100,10 +99,12 @@ async def read_data(request: Request, dataset_1: UploadFile = File(...), dataset
     df1 = read_csv_file(dataset_1.file)
     df2 = read_csv_file(dataset_2.file)
 
+
     user_id = str(uuid.uuid4())  # Generate a unique identifier for each user
-    user_ids[user_id] = True
+    user_ids.user_data = {user_id: True}
+
     print(user_id)
-    print(user_ids)
+    print(user_ids.user_data)
 
     await process_files(df1, df2, user_id)
 
@@ -112,22 +113,23 @@ async def read_data(request: Request, dataset_1: UploadFile = File(...), dataset
 
 @app.get("/get_results")
 async def get_result_files(request: Request, is_valid_token: bool = Depends(validate_api_key)):
-    user_id = None
-    print(user_ids)
+    user_data = getattr(user_ids, "user_data", None)
+    print(user_data)
+    if user_data is not None:
+        user_id = next(iter(user_data.keys()), None)
 
-    for k in user_ids.keys():
-        if k in results_dict:
-            user_id = k
-            break
+        print(user_id)
 
-    print(user_id)
-    if user_id is not None:
-        results = results_dict.pop(user_id, None)
-        if results is not None:
-            return results
-    else:
+        if user_id is not None:
+            results = getattr(results_dict, "user_results", None)
+            if results is not None:
+                delattr(user_ids, "user_data")
+                delattr(results_dict, "user_results")
+                return results
 
-        raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
+    raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
+
+
 
 
 
