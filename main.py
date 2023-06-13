@@ -12,18 +12,19 @@ import time
 
 app = FastAPI()
 
-API_KEY = config('API_KEY')
+API_KEYS = config('API_KEYS').split(',')
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
-results_dict = threading.local()  # Thread-local dictionary to store result dataframes
-user_ids = threading.local()  # Thread-local dictionary to map user_id to request.client
+results_dict = {}  # Dictionary to store result dataframes
+results_lock = threading.Lock()  # Lock to synchronize access to results_dict
+
 
 # Validate API token
 def validate_api_key(api_key: str = Depends(api_key_header)):
-    if api_key == API_KEY:
-        return True
+    if api_key in API_KEYS:
+        return api_key
     else:
-        raise HTTPException(status_code=401, detail="Invalid API token.")
+        raise HTTPException(status_code=401, detail="Invalid API key.")
 
 # Read csv files to pandas dataframe
 def read_csv_file(file):
@@ -71,16 +72,17 @@ async def process_files(df1: pd.DataFrame, df2: pd.DataFrame, user_id: int) -> N
     with concurrent.futures.ThreadPoolExecutor() as executor:
         loop = asyncio.get_event_loop()
         result_df1, result_df2 = await loop.run_in_executor(executor, process_data, df1, df2)
-        
+
         # Convert the dataframes to JSON records
         result_json_1 = result_df1.to_json(orient='records')
         result_json_2 = result_df2.to_json(orient='records')
-        
-        # Store the results in the results_dict
-        results_dict.user_results = {
-            "result_1": json.loads(result_json_1),
-            "result_2": json.loads(result_json_2)
-        }
+
+        # Store the result files in the results_dict
+        with results_lock:
+            results_dict[user_id] = {
+                "result_1": json.loads(result_json_1),
+                "result_2": json.loads(result_json_2)
+            }
 
 
 # -------------------------------API ENDPOINTS----------------------------------------------------------- #
@@ -92,42 +94,30 @@ async def index():
 
 # Endpoint for reading and processing CSV files
 @app.post("/read_data", status_code=status.HTTP_201_CREATED)
-async def read_data(request: Request, dataset_1: UploadFile = File(...), dataset_2: UploadFile = File(...), is_valid_token: bool = Depends(validate_api_key)):
+async def read_data(request: Request, dataset_1: UploadFile = File(...), dataset_2: UploadFile = File(...), user_id: str = Depends(validate_api_key)):
     validate_csv(dataset_1)
     validate_csv(dataset_2)
 
     df1 = read_csv_file(dataset_1.file)
     df2 = read_csv_file(dataset_2.file)
 
-
-    user_id = str(uuid.uuid4())  # Generate a unique identifier for each user
-    user_ids.user_data = {user_id: True}
-
-    print(user_id)
-    print(user_ids.user_data)
-
     await process_files(df1, df2, user_id)
 
-    return {"message": "CSV files read and processed successfully"}
+    return {"message": "The CSV files have been read and processed successfully."}
 
 
-@app.get("/get_results")
-async def get_result_files(request: Request, is_valid_token: bool = Depends(validate_api_key)):
-    user_data = getattr(user_ids, "user_data", None)
-    print(user_data)
-    if user_data is not None:
-        user_id = next(iter(user_data.keys()), None)
+# Endpoint for retrieving result Dataframes
+@app.get("/get_results", status_code=status.HTTP_200_OK)
+async def get_results(user_id: str = Depends(validate_api_key)):
+    with results_lock:
+        if user_id in results_dict:
+            results = results_dict[user_id]
+            del results_dict[user_id]
 
-        print(user_id)
+            return results
+        else:
+            raise HTTPException(status_code=404, detail="Result files not found.")
 
-        if user_id is not None:
-            results = getattr(results_dict, "user_results", None)
-            if results is not None:
-                delattr(user_ids, "user_data")
-                delattr(results_dict, "user_results")
-                return results
-
-    raise HTTPException(detail="Result files not found.", status_code=status.HTTP_404_NOT_FOUND)
 
 
 
