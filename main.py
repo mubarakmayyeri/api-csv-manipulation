@@ -47,7 +47,7 @@ def validate_csv(file):
 # Process the CSV files
 def process_data(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
     # Adding time delay of 60s
-    # time.sleep(60)
+    time.sleep(60)
 
     sum_df1 = df1['A'] + df1['B']
     sum_df2 = df2['A'] + df2['B']
