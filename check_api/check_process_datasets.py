@@ -6,12 +6,19 @@ import os
 def main():
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
+    result_dir = os.path.join(base_dir, 'results')
+
+    if not os.path.exists(result_dir):
+        os.makedirs(result_dir)
+
+    results_path = result_dir
+
     ip_address = config('IP_ADDRESS')
 
     # API key
     api_key = config('API_KEY')
 
-    url = f'http://{ip_address}/read_data'
+    url = f'http://{ip_address}/process_datasets'
 
     headers = {
         'X-API-Key': api_key
@@ -32,9 +39,19 @@ def main():
     response_data = response.json()
 
     if response.status_code == 201:
-        print(f'Success: {response.status_code}:', end=' ')
-        if 'message' in response_data:
-            print(f"- {response_data['message']}")
+
+        # Extract the result data
+        result_df1 = response_data.get('result_1')
+        result_df2 = response_data.get('result_2')
+
+        # Save result dataframes to local files
+        with open(f'{results_path}/result_df1.json', 'w') as file:
+            json.dump(result_df1, file)
+
+        with open(f'{results_path}/result_df2.json', 'w') as file:
+            json.dump(result_df2, file)
+
+        print(f"Success: {response.status_code} - Result dataframes saved successfully.")
 
     else:
         print(f"Error: {response.status_code} - {response_data['detail']}")

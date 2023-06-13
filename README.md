@@ -43,12 +43,10 @@ python main.py
         "message": "API is running succesfully"
         }
         ```
-    - **Read data** (POST): http://localhost:8000/read_data
+    - **Process Datasets** (POST): http://localhost:8000/process_datasets
       - This endpoint requires two CSV files as input datasets.
-      - The API will read and process the data, generating result files.
-
-    - **Get results** (GET): http://localhost:8000/get_results
-      - This endpoint returns a JSON file wihch contains the processed dataframes.
+      - The API will read and process the data, generating result Dataframes.
+      - The response will be the result Dataframes in JSON format.
 
 ## Directory Structure
 The repository has the following directory structure:
@@ -66,8 +64,7 @@ api-csv-manipulation/
   │ ├── dataset_1.csv
   │ └── dataset_2.csv
   ├── results/
-  ├── check_get_results.py
-  └── check_read_data.py
+  └── check_process_datasets.py
 
 ```
 
@@ -97,14 +94,9 @@ Make sure not to commit the `.env` file to version control to keep the sensitive
 
 ## Testing the API
 
-1. Test `read_data` endpoint:
+1. Test `process_datasets` endpoint:
 ```shell
-python .\check_api\check_read_data.py
-```
-
-2. Test `get_results` endpoint:
-```shell
-python .\check_api\check_get_results.py
+python .\check_api\chech_process_datasets.py
 ```
 - The result JSON files will be saved in the `./check_api/results/` directory.
 
@@ -120,10 +112,9 @@ The API has been deployed on an AWS EC2 instance with Nginx.
 To access the API endpoints, use the following URLs:
 
 - **Index**: https://3.108.61.108/
-- **Read data**: https://3.108.61.108/read_data
-- **Get results**: https://3.108.61.108/get_results
+- **Process Datasets**: https://3.108.61.108/process_datasets
 
-When calling the `read_data` and `get_results` endpoints, include the following header in your request:
+When calling the `process_datasets` endpoint, include the following header in your request:
 ```json
 {
 "X-API-Key": "Your_API_Key"
